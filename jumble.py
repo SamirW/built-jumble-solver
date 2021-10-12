@@ -6,11 +6,14 @@ set of letters against a provided word list. Simple implentation via CLI.
 
     Typical usage example (from command line):
 
-    python3 jumbly.py hiresamir
+    python3 jumble.py hiresamir
 """
 
 import argparse
 from itertools import permutations
+from collections import defaultdict
+
+ALPHABET = set('abcdefghijklmnopqrstuvwxyz')
 
 
 def open_dictionary(filename: str) -> set:
@@ -31,7 +34,7 @@ def open_dictionary(filename: str) -> set:
     return dictionary
 
 
-def solve_jumble(letters: str, dictionary: set) -> list:
+def solve_jumble_permuation(letters: str, dictionary: set) -> list:
     """Finds all possible words able to be constructed from queried letters.
 
     Checks all permutations of letters length 2 and up in queried string of
@@ -45,8 +48,7 @@ def solve_jumble(letters: str, dictionary: set) -> list:
     Returns:
         A list of valid words, each elementing representing one word.
     """
-    if len(letters) < 2: # Assuming min word length is 2
-        print("No words found")
+    if len(letters) < 2:  # Assuming min word length is 2
         return []
 
     answers = set()
@@ -61,14 +63,62 @@ def solve_jumble(letters: str, dictionary: set) -> list:
     sorted_answers = list(answers)
     sorted_answers.sort()
     sorted_answers.sort(key=len, reverse=True)
-
-    if sorted_answers:
-        for word in sorted_answers:
-            print(word)
-    else:
-        print("No words found")
-
     return sorted_answers
+
+
+def create_set_dictionary(filename: str) -> defaultdict:
+    """Creates dictionary of words from provided word list file.
+
+    Args:
+        filename: Path of word list to be used.
+
+    Returns:
+        A dictionary where words containing the same letters are in a list stored
+        under the same key.
+    """
+    dictionary = defaultdict(lambda: [])
+
+    with open(filename, 'r', encoding='UTF-8') as file:
+        for word in file:
+            dictionary[frozenset(word.strip())].append(word.strip())
+
+    return dictionary
+
+
+def solve_jumble_iteration(query: str, dictionary: defaultdict) -> list:
+    """Finds all possible words able to be constructed from queried letters.
+
+    Checks to see which words in the dictionary do not contain any letters not
+    present in the query. Proceeds to make sure no words has more instances of
+    a letter than the query.
+
+    Args:
+        letters: String of letters from which to construct words.
+        dictionary: The dictionary against which to check for valid words.
+
+    Returns:
+        A list of valid words, each elementing representing one word.
+    """
+    if len(query) < 2:  # Assuming min word length is 2
+        return []
+
+    non_query_set = ALPHABET-set(query)
+    answers = list()
+
+    for letter_set, word_list in dictionary.items():
+        if not non_query_set.intersection(letter_set):
+            for word in word_list:
+                valid_word = True
+                for letter in letter_set:
+                    if word.count(letter) > query.count(letter):
+                        valid_word = False
+                        continue
+                if valid_word:
+                    answers.append(word)
+
+    answers.sort()
+    answers.sort(key=len, reverse=True)
+    return answers
 
 
 if __name__ == '__main__':
@@ -89,6 +139,20 @@ if __name__ == '__main__':
         default='corncob_lowercase.txt')
     args = parser.parse_args()
 
-    word_dict = open_dictionary(args.dict)
     query_letters = ''.join(x for x in args.letters if x.isalpha())
-    solve_jumble(query_letters, word_dict)
+
+    if len(query_letters) < 9:  # Basic time testing shows 9 to be the inflection point
+        dict_fn = open_dictionary
+        solver_fn = solve_jumble_permuation
+    else:
+        dict_fn = create_set_dictionary
+        solver_fn = solve_jumble_iteration
+
+    word_dict = dict_fn(args.dict)
+    answer = solver_fn(query_letters, word_dict)
+
+    if answer:
+        for word in answer:
+            print(word)
+    else:
+        print("No words found")
