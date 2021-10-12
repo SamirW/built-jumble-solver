@@ -103,7 +103,7 @@ def solve_jumble_iteration(query: str, dictionary: defaultdict) -> list:
         return []
 
     non_query_set = ALPHABET-set(query)
-    answers = list()
+    answers = []
 
     for letter_set, word_list in dictionary.items():
         if not non_query_set.intersection(letter_set):
@@ -142,14 +142,9 @@ if __name__ == '__main__':
     query_letters = ''.join(x for x in args.letters if x.isalpha())
 
     if len(query_letters) < 9:  # Basic time testing shows 9 to be the inflection point
-        dict_fn = open_dictionary
-        solver_fn = solve_jumble_permuation
+        answer = solve_jumble_permuation(query_letters, open_dictionary(args.dict))
     else:
-        dict_fn = create_set_dictionary
-        solver_fn = solve_jumble_iteration
-
-    word_dict = dict_fn(args.dict)
-    answer = solver_fn(query_letters, word_dict)
+        answer = solve_jumble_iteration(query_letters, create_set_dictionary(args.dict))
 
     if answer:
         for word in answer:
