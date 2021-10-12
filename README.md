@@ -65,7 +65,6 @@ Iterating through and hashing the word list is `O(m)` where `m` is the length of
 
 * This is a very naive implementation of permutation checking. If a string of letters contains more than one instance of a letter, then there will be wasted time (roof has two combinations of length three that are "roo" and "roo"). A more intelligent permutation implementation would skip over these, whereas I simply check to make sure I haven't seen the word before.
 * I simply tested at which point the iteration method became faster than the permutation method (more accurately, at which point the permutation method blew up). For our default word list, it is when the query length is 9 or greater.
-```
 
 ## Acknowledgements
  
