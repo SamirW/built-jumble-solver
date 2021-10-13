@@ -112,7 +112,7 @@ def solve_jumble_iteration(query: str, dictionary: defaultdict) -> list:
                 for letter in letter_set:
                     if word.count(letter) > query.count(letter):
                         valid_word = False
-                        continue
+                        break
                 if valid_word:
                     answers.append(word)
 
